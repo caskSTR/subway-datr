@@ -601,25 +601,25 @@
         function buildSearchKeywords(concept, stationName) {
             const c = concept;
             const keywords = {
-                cafe: `${stationName} 카페`,
-                food: `${stationName} 맛집`,
-                spot: `${stationName} 데이트`
+                cafe: `${stationName}역 카페`,
+                food: `${stationName}역 맛집`,
+                spot: `${stationName}역 데이트`
             };
 
             if (c.includes('카페')) {
-                keywords.cafe = `${stationName} 감성 카페`;
+                keywords.cafe = `${stationName}역 감성 카페`;
             }
             if (c.includes('맛집') || c.includes('식사')) {
-                keywords.food = `${stationName} 맛집`;
+                keywords.food = `${stationName}역 맛집`;
             }
             if (c.includes('산책') || c.includes('한강') || c.includes('힐링')) {
-                keywords.spot = `${stationName} 공원`;
+                keywords.spot = `${stationName}역 공원`;
             }
             if (c.includes('야경')) {
-                keywords.spot = `${stationName} 야경`;
+                keywords.spot = `${stationName}역 야경`;
             }
             if (c.includes('전시') || c.includes('문화')) {
-                keywords.spot = `${stationName} 전시`;
+                keywords.spot = `${stationName}역 전시`;
             }
 
             return keywords;
@@ -769,6 +769,7 @@
     </script>
 </body>
 </html>
+
 
 
 
