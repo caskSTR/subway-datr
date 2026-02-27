@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 지하철역 데이트 코스</title>
+    <style>
+        :root {
+            --color-bg-base: #0f172a;
+            --color-bg-elevated: #1e293b;
+            --color-bg-surface: #334155;
+            --color-text-primary: #f1f5f9;
+            --color-text-secondary: #cbd5e1;
+            --color-primary: #38bdf8;
+            --color-primary-hover: #0ea5e9;
+            --color-accent: #f472b6;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --color-bg-base: #fcfcf9;
+                --color-bg-elevated: #ffffff;
+                --color-bg-surface: #f1f5f9;
+                --color-text-primary: #0f172a;
+                --color-text-secondary: #475569;
+                --color-primary: #0284c7;
+                --color-primary-hover: #0369a1;
+                --color-accent: #ec4899;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            font-size: 1rem;
+        }
+
+        .control-panel {
+            background: var(--color-bg-elevated);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .line-selector {
+            margin-bottom: 20px;
+        }
+
+        .line-selector label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .line-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .line-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--color-bg-surface);
+            border-radius: 20px;
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .line-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .line-btn.active {
+            border-color: var(--color-primary);
+            background: var(--color-primary);
+            color: #0f172a;
+        }
+
+        .random-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .random-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(56, 189, 248, 0.4);
+        }
+
+        .random-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-card {
+            background: var(--color-bg-elevated);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            animation: fadeIn 0.5s ease;
+            margin-bottom: 30px;
+        }
+
+        .result-card.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .station-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--color-bg-surface);
+        }
+
+        .station-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--color-primary);
+        }
+
+        .line-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .course-section {
+            margin-bottom: 30px;
+        }
+
+        .course-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .course-icon {
+            font-size: 1.5rem;
+        }
+
+        .place-card {
+            display: block;
+            background: var(--color-bg-surface);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease, box-shadow 0.2s ease;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .place-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+        }
+
+        .place-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+        }
+
+        .place-desc {
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .place-category {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--color-primary);
+            color: #0f172a;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .timeline {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid var(--color-bg-surface);
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-time {
+            min-width: 70px;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .timeline-content {
+            flex: 1;
+            color: var(--color-text-secondary);
+        }
+
+        .concept-panel {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-bg-surface);
+            margin-bottom: 25px;
+        }
+
+        .concept-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .concept-input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--color-bg-surface);
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            margin-bottom: 10px;
+        }
+
+        .concept-helper {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .concept-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .concept-chip {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--color-bg-surface);
+            background: var(--color-bg-surface);
+            color: var(--color-text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .concept-chip:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        .generate-course-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: var(--color-primary);
+            color: #0f172a;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .generate-course-btn:disabled {
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        #map {
+            width: 100%;
+            height: 320px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #0f172a;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .control-panel {
+                padding: 20px;
+            }
+
+            .station-name {
+                font-size: 1.5rem;
+            }
+
+            .timeline-item {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .timeline-time {
+                min-width: auto;
+            }
+        }
+    </style>
+
+    <!-- YOUR_JS_KEY 자리에 카카오 JavaScript 키 입력 -->
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=8ac7cf6be5dc150b231d2ea6cb68e2c6&libraries=services"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚇 랜덤 지하철역 데이트 코스</h1>
+            <p class="subtitle">오늘은 어디로 데이트 갈까요? 운명에 맡겨보세요!</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="line-selector">
+                <label>지하철 노선 선택 (복수 선택 가능)</label>
+                <div class="line-buttons">
+                    <button class="line-btn active" data-line="all">전체</button>
+                    <button class="line-btn" data-line="1" style="background: #003DA5; color: white;">1호선</button>
+                    <button class="line-btn" data-line="2" style="background: #00A84D; color: white;">2호선</button>
+                    <button class="line-btn" data-line="3" style="background: #EF7C1C; color: white;">3호선</button>
+                    <button class="line-btn" data-line="4" style="background: #00A5DE; color: white;">4호선</button>
+                    <button class="line-btn" data-line="5" style="background: #996CAC; color: white;">5호선</button>
+                    <button class="line-btn" data-line="6" style="background: #CD7C2F; color: white;">6호선</button>
+                    <button class="line-btn" data-line="7" style="background: #747F00; color: white;">7호선</button>
+                    <button class="line-btn" data-line="9" style="background: #BDB092; color: white;">9호선</button>
+                </div>
+            </div>
+            <button class="random-btn" onclick="generateRandomStation()">✨ 랜덤 역 뽑기</button>
+        </div>
+
+        <div class="result-card" id="resultCard">
+            <div class="station-header">
+                <h2 class="station-name" id="stationName"></h2>
+                <span class="line-badge" id="lineBadge"></span>
+            </div>
+
+            <div class="concept-panel">
+                <label class="concept-label">원하는 데이트 컨셉을 입력해주세요</label>
+                <div class="concept-helper">
+                    예시: 카페 투어, 맛집 탐방, 한강 산책, 조용한 힐링, 쇼핑 위주, 야경 감상, 문화·전시 데이트 등
+                </div>
+                <div class="concept-btns">
+                    <button type="button" class="concept-chip" onclick="setConcept('카페 투어')">카페 투어</button>
+                    <button type="button" class="concept-chip" onclick="setConcept('맛집 탐방')">맛집 탐방</button>
+                    <button type="button" class="concept-chip" onclick="setConcept('한강 산책')">한강 산책</button>
+                    <button type="button" class="concept-chip" onclick="setConcept('조용한 힐링')">조용한 힐링</button>
+                    <button type="button" class="concept-chip" onclick="setConcept('야경 감상')">야경 감상</button>
+                    <button type="button" class="concept-chip" onclick="setConcept('문화 전시')">문화 전시</button>
+                </div>
+                <input id="conceptInput" class="concept-input" placeholder="원하는 데이트 컨셉을 자유롭게 적어주세요" />
+                <button class="generate-course-btn" id="generateCourseBtn" onclick="generateCourse()">🎯 이 컨셉으로 코스 만들기</button>
+            </div>
+
+            <div id="map"></div>
+
+            <div class="course-section">
+                <h3 class="course-title">
+                    <span class="course-icon">☕</span>
+                    추천 카페
+                </h3>
+                <div id="cafeList"></div>
+            </div>
+
+            <div class="course-section">
+                <h3 class="course-title">
+                    <span class="course-icon">🍽️</span>
+                    맛집 추천
+                </h3>
+                <div id="restaurantList"></div>
+            </div>
+
+            <div class="course-section">
+                <h3 class="course-title">
+                    <span class="course-icon">📸</span>
+                    데이트 명소
+                </h3>
+                <div id="spotList"></div>
+            </div>
+
+            <div class="timeline">
+                <h3 class="course-title">
+                    <span class="course-icon">⏰</span>
+                    추천 일정
+                </h3>
+                <div id="scheduleList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 서울 지하철 1~9호선 전체 역 목록
+        const allStations = {
+            '1': ['소요산','동두천','보산','동두천중앙','지행','덕정','덕계','양주','녹양','가능','의정부','회룡','망월사','도봉산','도봉','방학','창동','녹천','월계','광운대','석계','신이문','외대앞','회기','청량리','제기동','신설동','동묘앞','동대문','종로5가','종로3가','종각','시청','서울역','남영','용산','노량진','대방','신길','영등포','신도림','구로','구일','개봉','오류동','온수','역곡','소사','부천','중동','송내','부개','부평','백운','동암','간석','주안','도화','제물포','도원','동인천','인천'],
+            '2': ['시청','을지로입구','을지로3가','을지로4가','동대문역사문화공원','신당','상왕십리','왕십리','한양대','뚝섬','성수','건대입구','구의','강변','잠실나루','잠실','잠실새내','종합운동장','삼성','선릉','역삼','강남','교대','서초','방배','사당','낙성대','서울대입구','봉천','신림','신대방','구로디지털단지','대림','신도림','문래','영등포구청','당산','합정','홍대입구','신촌','이대','아현','충정로'],
+            '3': ['대화','주엽','정발산','마두','백석','대곡','화정','원당','원흥','삼송','지축','구파발','연신내','불광','녹번','홍제','무악재','독립문','경복궁','안국','종로3가','을지로3가','충무로','동대입구','약수','금호','옥수','압구정','신사','잠원','고속터미널','교대','남부터미널','양재','매봉','도곡','대치','학여울','대청','일원','수서','가락시장','경찰병원','오금'],
+            '4': ['당고개','상계','노원','창동','쌍문','수유','미아','미아사거리','길음','성신여대입구','한성대입구','혜화','동대문','동대문역사문화공원','충무로','명동','회현','서울역','숙대입구','삼각지','신용산','이촌','동작','총신대입구','사당','남태령','선바위','경마공원','대공원','과천','정부과천청사','인덕원','평촌','범계','금정','산본','수리산','대야미','반월','상록수','한대앞','중앙','고잔','초지','안산','신길온천','정왕','오이도'],
+            '5': ['방화','개화산','김포공항','송정','마곡','발산','우장산','화곡','까치산','신정','목동','오목교','양평','영등포구청','영등포시장','신길','여의도','여의나루','마포','공덕','애오개','충정로','서대문','광화문','종로3가','을지로4가','동대문역사문화공원','청구','신금호','행당','왕십리','마장','답십리','장한평','군자','아차산','광나루','천호','강동','길동','굽은다리','명일','고덕','상일동','하남풍산','하남시청','하남검단산'],
+            '6': ['응암','역촌','불광','독바위','연신내','구산','새절','증산','디지털미디어시티','월드컵경기장','마포구청','망원','합정','상수','광흥창','대흥','공덕','효창공원앞','삼각지','녹사평','이태원','한강진','버티고개','약수','청구','신당','동묘앞','창신','보문','안암','고려대','월곡','상월곡','돌곶이','석계','태릉입구','화랑대','봉화산'],
+            '7': ['장암','도봉산','수락산','마들','노원','중계','하계','공릉','태릉입구','먹골','중화','상봉','면목','사가정','용마산','중곡','군자','어린이대공원','건대입구','뚝섬유원지','청담','강남구청','학동','논현','반포','고속터미널','내방','이수','남성','숭실대입구','상도','장승배기','신대방삼거리','보라매','신풍','대림','남구로','가산디지털단지','철산','광명사거리','천왕','온수','까치울','부천종합운동장','춘의','신중동','부천시청','상동','삼산체육관','굴포천','부평구청'],
+            '9': ['개화','김포공항','공항시장','신방화','마곡나루','양천향교','가양','증미','등촌','염창','신목동','선유도','당산','국회의사당','여의도','샛강','노량진','노들','흑석','동작','구반포','신반포','고속터미널','사평','신논현','언주','선정릉','삼성중앙','봉은사','종합운동장','삼전','석촌고분','석촌','송파나루','한성백제','올림픽공원','둔촌오륜','중앙보훈병원']
+        };
+
+        let selectedLines = ['all'];
+        let currentStation = null;
+        let currentLine = null;
+
+        let map;
+        let placesService;
+        let mapInitialized = false;
+        let markers = [];
+
+        document.querySelectorAll('.line-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const line = this.dataset.line;
+                
+                if (line === 'all') {
+                    selectedLines = ['all'];
+                    document.querySelectorAll('.line-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                } else {
+                    const allBtn = document.querySelector('[data-line="all"]');
+                    allBtn.classList.remove('active');
+                    
+                    if (selectedLines.includes('all')) {
+                        selectedLines = [];
+                    }
+                    
+                    if (selectedLines.includes(line)) {
+                        selectedLines = selectedLines.filter(l => l !== line);
+                        this.classList.remove('active');
+                    } else {
+                        selectedLines.push(line);
+                        this.classList.add('active');
+                    }
+                    
+                    if (selectedLines.length === 0) {
+                        selectedLines = ['all'];
+                        allBtn.classList.add('active');
+                    }
+                }
+            });
+        });
+
+        function initMap() {
+            if (mapInitialized) return;
+
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) return;
+
+            const options = {
+                center: new kakao.maps.LatLng(37.5665, 126.9780),
+                level: 5
+            };
+            map = new kakao.maps.Map(mapContainer, options);
+            placesService = new kakao.maps.services.Places(map);
+            mapInitialized = true;
+        }
+
+        function clearMarkers() {
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+        }
+
+        function setConcept(text) {
+            const input = document.getElementById('conceptInput');
+            input.value = text;
+        }
+
+        function generateRandomStation() {
+            let line;
+            if (selectedLines.includes('all')) {
+                const lines = Object.keys(allStations);
+                line = lines[Math.floor(Math.random() * lines.length)];
+            } else {
+                line = selectedLines[Math.floor(Math.random() * selectedLines.length)];
+            }
+
+            if (!allStations[line] || allStations[line].length === 0) {
+                alert('선택된 노선에 역 정보가 없습니다!');
+                return;
+            }
+
+            const stations = allStations[line];
+            const randomStationName = stations[Math.floor(Math.random() * stations.length)];
+
+            currentStation = randomStationName;
+            currentLine = line;
+
+            showStationOnly(randomStationName, line);
+        }
+
+        function showStationOnly(stationName, line) {
+            const lineColors = {
+                '1': '#003DA5',
+                '2': '#00A84D',
+                '3': '#EF7C1C',
+                '4': '#00A5DE',
+                '5': '#996CAC',
+                '6': '#CD7C2F',
+                '7': '#747F00',
+                '9': '#BDB092'
+            };
+
+            document.getElementById('stationName').textContent = stationName;
+            const lineBadge = document.getElementById('lineBadge');
+            lineBadge.textContent = `${line}호선`;
+            lineBadge.style.backgroundColor = lineColors[line];
+
+            document.getElementById('cafeList').innerHTML = `
+                <div class="place-card">
+                    <div class="place-name">컨셉을 입력하면 코스를 만들어 드릴게요</div>
+                    <div class="place-desc">위의 입력란에 원하는 데이트 컨셉을 적고, "이 컨셉으로 코스 만들기" 버튼을 눌러주세요.</div>
+                </div>
+            `;
+            document.getElementById('restaurantList').innerHTML = '';
+            document.getElementById('spotList').innerHTML = '';
+            document.getElementById('scheduleList').innerHTML = '';
+
+            const resultCard = document.getElementById('resultCard');
+            resultCard.classList.remove('show');
+            setTimeout(() => {
+                resultCard.classList.add('show');
+                resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                initMap();
+                clearMarkers();
+            }, 100);
+        }
+
+        function buildSearchKeywords(concept, stationName) {
+            const c = concept;
+            const keywords = {
+                cafe: `${stationName} 카페`,
+                food: `${stationName} 맛집`,
+                spot: `${stationName} 데이트`
+            };
+
+            if (c.includes('카페')) {
+                keywords.cafe = `${stationName} 감성 카페`;
+            }
+            if (c.includes('맛집') || c.includes('식사')) {
+                keywords.food = `${stationName} 맛집`;
+            }
+            if (c.includes('산책') || c.includes('한강') || c.includes('힐링')) {
+                keywords.spot = `${stationName} 공원`;
+            }
+            if (c.includes('야경')) {
+                keywords.spot = `${stationName} 야경`;
+            }
+            if (c.includes('전시') || c.includes('문화')) {
+                keywords.spot = `${stationName} 전시`;
+            }
+
+            return keywords;
+        }
+
+        function generateCourse() {
+            if (!currentStation || !currentLine) {
+                alert('먼저 랜덤 역을 뽑아주세요!');
+                return;
+            }
+
+            const conceptInput = document.getElementById('conceptInput');
+            const concept = conceptInput.value.trim();
+            if (!concept) {
+                alert('데이트 컨셉을 입력해주세요!');
+                conceptInput.focus();
+                return;
+            }
+
+            initMap();
+            clearMarkers();
+
+            const btn = document.getElementById('generateCourseBtn');
+            btn.textContent = '🔍 카카오 지도에서 코스 검색 중...';
+            btn.disabled = true;
+
+            const { cafe, food, spot } = buildSearchKeywords(concept, currentStation);
+
+            const loadingHTML = (label) => `
+                <div class="place-card">
+                    <div class="place-name">🔍 "${concept}" 컨셉 ${label} 검색 중...</div>
+                    <div class="place-desc">잠시만 기다려주세요!</div>
+                </div>
+            `;
+            document.getElementById('cafeList').innerHTML = loadingHTML('카페');
+            document.getElementById('restaurantList').innerHTML = loadingHTML('맛집');
+            document.getElementById('spotList').innerHTML = loadingHTML('명소');
+
+            document.getElementById('scheduleList').innerHTML = `
+                <div class="timeline-item">
+                    <div class="timeline-time">⏳</div>
+                    <div class="timeline-content">실제 장소 기준으로 일정을 짜는 중입니다...</div>
+                </div>
+            `;
+
+            searchPlacesByKeyword(cafe, 'cafeList', '카페', () => {
+                searchPlacesByKeyword(food, 'restaurantList', '맛집', () => {
+                    searchPlacesByKeyword(spot, 'spotList', '명소', () => {
+                        const schedule = generateSchedule(currentStation, concept);
+                        document.getElementById('scheduleList').innerHTML = schedule.map(item => `
+                            <div class="timeline-item">
+                                <div class="timeline-time">${item.time}</div>
+                                <div class="timeline-content">${item.activity}</div>
+                            </div>
+                        `).join('');
+                        btn.textContent = '🎯 이 컨셉으로 코스 다시 만들기';
+                        btn.disabled = false;
+                    });
+                });
+            });
+        }
+
+        function searchPlacesByKeyword(keyword, targetElementId, label, done) {
+            if (!placesService) {
+                alert('카카오 지도 초기화에 실패했습니다.');
+                done && done();
+                return;
+            }
+
+            const callback = function (data, status, pagination) {
+                if (status === kakao.maps.services.Status.OK) {
+                    const top = data.slice(0, 5);
+                    const bounds = new kakao.maps.LatLngBounds();
+
+                    const listHTML = top.map(place => {
+                        const lat = place.y;
+                        const lng = place.x;
+                        const title = place.place_name;
+                        const addr = place.road_address_name || place.address_name;
+                        const id = place.id; // place id[web:76][web:119]
+
+                        const position = new kakao.maps.LatLng(lat, lng);
+                        bounds.extend(position);
+
+                        const marker = new kakao.maps.Marker({
+                            map: map,
+                            position: position
+                        });
+                        markers.push(marker);
+
+                        const iwContent = `<div style="padding:5px;font-size:12px;">${title}</div>`;
+                        const infowindow = new kakao.maps.InfoWindow({
+                            content: iwContent
+                        });
+                        kakao.maps.event.addListener(marker, 'mouseover', function () {
+                            infowindow.open(map, marker);
+                        });
+                        kakao.maps.event.addListener(marker, 'mouseout', function () {
+                            infowindow.close();
+                        });
+
+                        // 장소 상세 페이지 있으면 place.map.kakao.com/id 로,
+                        // 없다면 검색 페이지로 연결.[web:76][web:119]
+                        const placeUrl = id
+                            ? `https://place.map.kakao.com/${id}`
+                            : `https://map.kakao.com/?q=${encodeURIComponent(title)}`;
+
+                        return `
+                            <a class="place-card" href="${placeUrl}" target="_blank" rel="noopener noreferrer">
+                                <div class="place-name">${title}</div>
+                                <div class="place-desc">
+                                    ${addr ? addr + ' · ' : ''}"${keyword}" 검색 결과에서 추천된 ${label}입니다.
+                                    (클릭 시 카카오맵으로 이동)
+                                </div>
+                                <span class="place-category">${label}</span>
+                            </a>
+                        `;
+                    }).join('');
+
+                    document.getElementById(targetElementId).innerHTML = listHTML;
+                    if (!bounds.isEmpty()) {
+                        map.setBounds(bounds);
+                    }
+                } else {
+                    document.getElementById(targetElementId).innerHTML = `
+                        <div class="place-card">
+                            <div class="place-name">검색 결과가 없습니다</div>
+                            <div class="place-desc">"${keyword}"(으)로 ${label}을(를) 찾지 못했어요. 다른 컨셉이나 역으로 시도해보세요.</div>
+                        </div>
+                    `;
+                }
+                done && done();
+            };
+
+            placesService.keywordSearch(keyword, callback);
+        }
+
+        function generateSchedule(stationName, concept) {
+            return [
+                { time: '12:00', activity: `${stationName}역 도착 · 주변 분위기 익히며 가볍게 산책` },
+                { time: '13:00', activity: `"${concept}" 컨셉에 맞는 첫 번째 카페/맛집 방문` },
+                { time: '15:00', activity: `근처 데이트 명소에서 구경 및 사진 찍기` },
+                { time: '17:00', activity: `조용한 카페 또는 공원에서 여유로운 시간 보내기` },
+                { time: '19:00', activity: `저녁 식사 후 ${stationName} 주변 야간 분위기 즐기며 데이트 마무리` }
+            ];
+        }
+    </script>
+</body>
+</html>
